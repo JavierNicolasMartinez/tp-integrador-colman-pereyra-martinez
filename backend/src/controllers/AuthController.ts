@@ -64,4 +64,10 @@ export class AuthController {
     const result = await this.authService.login(credentials.email, credentials.password);
     res.status(200).json(result);
   };
+
+  // Devuelve el usuario logueado con sus permisos (lo usa el AuthContext del frontend).
+  // req.user lo completa el middleware authenticate.
+  me = (req: Request, res: Response): void => {
+    res.status(200).json(req.user);
+  };
 }

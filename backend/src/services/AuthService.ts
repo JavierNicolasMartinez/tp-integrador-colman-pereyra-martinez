@@ -71,8 +71,26 @@ export class AuthService {
     return this.buildAuthResult(user, role);
   }
 
-  // Lo usa el middleware authenticate: así solo este service conoce el secreto del JWT
-  verifyToken(token: string): TokenPayload {
+  // Lo usa el middleware authenticate. Se consulta la base en cada request para que
+  // un cambio de rol (RF6) se aplique enseguida, sin esperar a que venza el token.
+  async getUserFromToken(token: string): Promise<AuthUser> {
+    const { sub } = this.verifyToken(token);
+
+    const user = await this.userRepository.findById(sub);
+    if (!user) {
+      throw new HttpError(401, 'El usuario del token ya no existe');
+    }
+
+    const role = await this.roleRepository.findById(user.roleId);
+    if (!role) {
+      throw new HttpError(500, 'El usuario tiene asignado un rol inexistente');
+    }
+
+    return this.toAuthUser(user, role);
+  }
+
+  // Solo este service conoce el secreto del JWT
+  private verifyToken(token: string): TokenPayload {
     try {
       const decoded = jwt.verify(token, this.config.jwtSecret);
       if (typeof decoded === 'object' && typeof decoded.sub === 'string') {
@@ -90,14 +108,16 @@ export class AuthService {
       expiresIn: this.config.jwtExpiresInSeconds
     });
 
+    return { token, user: this.toAuthUser(user, role) };
+  }
+
+  // Nunca se devuelve el hash de la contraseña
+  private toAuthUser(user: UserRecord, role: RoleRecord): AuthUser {
     return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: role.name,
-        permissions: role.permissions
-      }
+      id: user.id,
+      email: user.email,
+      role: role.name,
+      permissions: role.permissions
     };
   }
 }

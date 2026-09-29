@@ -13,6 +13,7 @@ export interface CreateUserData {
 }
 
 export interface IUserRepository {
+  findById(id: string): Promise<UserRecord | null>;
   findByEmail(email: string): Promise<UserRecord | null>;
   create(data: CreateUserData): Promise<UserRecord>;
 }
