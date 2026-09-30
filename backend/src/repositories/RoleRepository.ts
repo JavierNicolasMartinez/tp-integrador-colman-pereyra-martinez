@@ -21,6 +21,11 @@ function toRoleRecord(doc: PopulatedRole): RoleRecord {
 const populatePermissions = { path: 'permissions', model: Permission };
 
 export class RoleRepository implements IRoleRepository {
+  async findAll(): Promise<RoleRecord[]> {
+    const docs = await Role.find().populate<{ permissions: IPermission[] }>(populatePermissions);
+    return docs.map(toRoleRecord);
+  }
+
   async findByName(name: string): Promise<RoleRecord | null> {
     const doc = await Role.findOne({ name }).populate<{ permissions: IPermission[] }>(populatePermissions);
     return doc ? toRoleRecord(doc) : null;

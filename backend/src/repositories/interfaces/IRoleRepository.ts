@@ -5,6 +5,7 @@ export interface RoleRecord {
 }
 
 export interface IRoleRepository {
+  findAll(): Promise<RoleRecord[]>;
   findByName(name: string): Promise<RoleRecord | null>;
   findById(id: string): Promise<RoleRecord | null>;
 }
