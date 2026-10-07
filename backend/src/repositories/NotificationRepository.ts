@@ -1,3 +1,4 @@
+import { isValidObjectId } from 'mongoose';
 import Notification, { type INotification } from '../models/Notification.ts';
 import type {
   CreateNotificationData,
@@ -29,5 +30,38 @@ export class NotificationRepository implements INotificationRepository {
       message: data.message
     });
     return toNotificationRecord(doc);
+  }
+
+  async findByUser(userId: string): Promise<NotificationRecord[]> {
+    const docs = await Notification.find({ user: userId }).sort({ createdAt: -1 }); // las más nuevas primero
+    return docs.map(toNotificationRecord);
+  }
+
+  async countUnreadByUser(userId: string): Promise<number> {
+    return Notification.countDocuments({ user: userId, isRead: false });
+  }
+
+  async markAsRead(id: string, userId: string): Promise<NotificationRecord | null> {
+    if (!isValidObjectId(id)) return null;
+
+    // Se filtra también por usuario: nadie puede marcar notificaciones ajenas
+    const doc = await Notification.findOneAndUpdate(
+      { _id: id, user: userId },
+      { isRead: true },
+      { returnDocument: 'after' }
+    );
+    return doc ? toNotificationRecord(doc) : null;
+  }
+
+  async markAllAsRead(userId: string): Promise<number> {
+    const result = await Notification.updateMany({ user: userId, isRead: false }, { isRead: true });
+    return result.modifiedCount;
+  }
+
+  async deleteByTicket(ticketId: string): Promise<number> {
+    if (!isValidObjectId(ticketId)) return 0;
+
+    const result = await Notification.deleteMany({ ticket: ticketId });
+    return result.deletedCount;
   }
 }

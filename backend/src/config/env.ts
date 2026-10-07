@@ -1,4 +1,8 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+// Busca el .env en la carpeta actual y en la raíz del repo (para correr el backend
+// sin Docker desde backend/). En Docker las variables llegan desde docker-compose.
+dotenv.config({ path: ['.env', '../.env'], quiet: true });
 
 // Si falta una variable obligatoria, la app no arranca y avisa cuál es
 function required(name: string): string {

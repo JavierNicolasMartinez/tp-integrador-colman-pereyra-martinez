@@ -1,14 +1,37 @@
 services:
   mongodb:
-    image: mongo:latest
-    container_name: tu_tienda
-    ports:
-      - "27017:27017"
+    image: mongo:8
+    restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: 1234
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      # Expuesto en la PC solo para usar Compass o correr el backend sin Docker
+      - "${DB_PORT:-27018}:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Dentro de la red de Docker, Mongo se llama "mongodb" y usa su puerto interno
+      DB_HOST: mongodb
+      DB_PORT: 27017
+    ports:
+      - "${API_PORT:-3000}:${API_PORT:-3000}"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # El servicio "frontend" se agrega al integrar la rama del frontend
 
 volumes:
   mongo_data:

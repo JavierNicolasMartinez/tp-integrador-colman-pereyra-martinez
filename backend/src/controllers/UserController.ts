@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { HttpError } from '../errors/HttpError.ts';
+import { requireUser } from '../middlewares/authenticate.ts';
 import type { UserService } from '../services/UserService.ts';
 
 // Valida el body de la asignación de rol sin usar any
@@ -23,10 +23,7 @@ export class UserController {
   };
 
   assignRole = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
-    // req.user lo completa el middleware authenticate
-    if (!req.user) {
-      throw new HttpError(401, 'No autenticado');
-    }
+    const currentUser = requireUser(req);
 
     const roleName = parseRoleName(req.body);
     if (!roleName) {
@@ -34,7 +31,7 @@ export class UserController {
       return;
     }
 
-    const user = await this.userService.assignRole(req.params.id, roleName, req.user.id);
+    const user = await this.userService.assignRole(req.params.id, roleName, currentUser.id);
     res.status(200).json(user);
   };
 }
