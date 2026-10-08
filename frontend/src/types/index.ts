@@ -28,6 +28,22 @@ export type RoleName = 'admin' | 'operador' | 'usuario';
 
 export const ROLE_NAMES: RoleName[] = ['admin', 'operador', 'usuario'];
 
+// Etiquetas legibles de los roles. Solo para mostrar: al backend viaja siempre el valor de RoleName
+export const ROLE_LABELS: Record<RoleName, string> = {
+  admin: 'Administrador',
+  operador: 'Operador',
+  usuario: 'Usuario',
+};
+
+export function isRoleName(value: string): value is RoleName {
+  return (ROLE_NAMES as string[]).includes(value);
+}
+
+// El backend devuelve el rol como string: si no es un rol conocido, se muestra tal cual
+export function getRoleLabel(role: string): string {
+  return isRoleName(role) ? ROLE_LABELS[role] : role;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
