@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router';
 import { getErrorMessage } from '../api/client.ts';
+import { AppFrame } from '../components/AppFrame.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
+import { FieldError } from '../components/FieldError.tsx';
+import { getRoleLabel, type RoleName } from '../types/index.ts';
+import { useFieldErrors } from '../utils/useFieldErrors.ts';
 
-const TEST_USERS = [
+const TEST_USERS: { role: RoleName; email: string; password: string }[] = [
   { role: 'admin', email: 'admin@tp.com', password: 'admin123' },
   { role: 'operador', email: 'operador@tp.com', password: 'operador123' },
   { role: 'usuario', email: 'usuario@tp.com', password: 'usuario123' },
@@ -24,6 +28,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const { errors, validate, clearError, fieldProps } = useFieldErrors();
 
   // Con la sesión iniciada no tiene sentido mostrar el login
   if (user) {
@@ -43,26 +48,52 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
+    <AppFrame className="auth-page">
       <form
-        className="card auth-card"
+        className="card auth-card glow-violet"
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          void handleSubmit();
+          if (validate(event.currentTarget)) void handleSubmit();
         }}
       >
-        <h1>Iniciar sesión</h1>
+        <span className="chip">
+          <span className="chip-icon" aria-hidden="true">✦</span> Mesa de Ayuda
+        </span>
+        <h1 className="hero-title">Iniciar sesión</h1>
+        <p className="auth-subtitle">Gestioná tus tickets de soporte</p>
 
         <label>
-          Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+          Correo electrónico
+          <input
+            {...fieldProps('email')}
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              clearError('email');
+            }}
+            required
+            autoFocus
+          />
+          <FieldError name="email" message={errors.email} />
         </label>
         <label>
           Contraseña
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input
+            {...fieldProps('password')}
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              clearError('password');
+            }}
+            required
+          />
+          <FieldError name="password" message={errors.password} />
         </label>
 
-        {error && <p className="alert error">{error}</p>}
+        {error && <p className="alert error" role="alert">{error}</p>}
 
         <button type="submit" className="button" disabled={submitting}>
           {submitting ? 'Ingresando…' : 'Ingresar'}
@@ -82,13 +113,15 @@ export function LoginPage() {
               onClick={() => {
                 setEmail(testUser.email);
                 setPassword(testUser.password);
+                clearError('email');
+                clearError('password');
               }}
             >
-              {testUser.role}
+              {getRoleLabel(testUser.role)}
             </button>
           ))}
         </div>
       </form>
-    </div>
+    </AppFrame>
   );
 }
