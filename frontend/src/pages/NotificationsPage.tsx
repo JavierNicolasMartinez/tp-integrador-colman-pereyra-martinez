@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { getErrorMessage } from '../api/client.ts';
 import { listNotifications, markAllAsRead, markAsRead } from '../api/notifications.api.ts';
 import { refreshNotificationBell } from '../components/NotificationBell.tsx';
+import { PageHeader } from '../components/PageHeader.tsx';
 import { StatusBadge } from '../components/StatusBadge.tsx';
 import type { AppNotification } from '../types/index.ts';
 import { formatDate } from '../utils/format.ts';
@@ -46,22 +47,25 @@ export function NotificationsPage() {
 
   return (
     <section>
-      <div className="page-header">
-        <h1>
-          Notificaciones {unreadCount > 0 && <span className="muted">({unreadCount} sin leer)</span>}
-        </h1>
-        <div className="actions">
-          <button type="button" className="button secondary" onClick={load}>
-            Actualizar
-          </button>
-          <button type="button" className="button" onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
-            Marcar todas como leídas
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Bandeja"
+        title="Notificaciones"
+        subtitle={
+          unreadCount > 0
+            ? `Tenés ${unreadCount} ${unreadCount === 1 ? 'notificación sin leer' : 'notificaciones sin leer'}.`
+            : 'Enterate al instante cuando cambia el estado de los tickets que seguís.'
+        }
+      >
+        <button type="button" className="button secondary" onClick={load}>
+          Actualizar
+        </button>
+        <button type="button" className="button" onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
+          Marcar todas como leídas
+        </button>
+      </PageHeader>
 
       {loading && <p className="page-message">Cargando notificaciones…</p>}
-      {error && <p className="alert error">{error}</p>}
+      {error && <p className="alert error" role="alert">{error}</p>}
 
       {!loading && notifications.length === 0 && (
         <p className="page-message">

@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { getErrorMessage } from '../api/client.ts';
 import { assignRole, listUsers } from '../api/users.api.ts';
 import { Can } from '../components/Can.tsx';
+import { PageHeader } from '../components/PageHeader.tsx';
+import { Select, type SelectOption } from '../components/Select.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
-import { ROLE_NAMES, type RoleName, type UserSummary } from '../types/index.ts';
+import { getRoleLabel, isRoleName, ROLE_LABELS, ROLE_NAMES, type RoleName, type UserSummary } from '../types/index.ts';
 
-function isRoleName(value: string): value is RoleName {
-  return (ROLE_NAMES as string[]).includes(value);
-}
+const ROLE_OPTIONS: SelectOption<RoleName>[] = ROLE_NAMES.map((role) => ({
+  value: role,
+  label: ROLE_LABELS[role],
+  tone: `role-${role}`,
+}));
 
 // RF6: el administrador lista los usuarios y les asigna un rol
 export function AdminUsersPage() {
@@ -34,7 +38,7 @@ export function AdminUsersPage() {
       const updated = await assignRole(userId, role);
       setUsers((current) => current.map((u) => (u.id === userId ? updated : u)));
       setSelectedRoles(({ [userId]: _saved, ...rest }) => rest);
-      setSuccess(`${updated.email} ahora tiene el rol ${updated.role}`);
+      setSuccess(`${updated.email} ahora tiene el rol ${getRoleLabel(updated.role)}`);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -44,20 +48,22 @@ export function AdminUsersPage() {
 
   return (
     <section>
-      <div className="page-header">
-        <h1>Usuarios</h1>
-      </div>
+      <PageHeader
+        eyebrow="Administración"
+        title="Usuarios"
+        subtitle="Asigná un rol a cada persona para definir qué puede hacer en la mesa de ayuda."
+      />
 
       {loading && <p className="page-message">Cargando usuarios…</p>}
-      {error && <p className="alert error">{error}</p>}
-      {success && <p className="alert success">{success}</p>}
+      {error && <p className="alert error" role="alert">{error}</p>}
+      {success && <p className="alert success" role="status">{success}</p>}
 
       {users.length > 0 && (
-        <div className="card table-card">
+        <div className="card table-card glow-violet">
           <table>
             <thead>
               <tr>
-                <th>Email</th>
+                <th>Correo</th>
                 <th>Rol</th>
                 <Can permission="user:assign-role">
                   <th />
@@ -77,27 +83,18 @@ export function AdminUsersPage() {
                     </td>
                     <td>
                       <Can permission="user:assign-role">
-                        <select
+                        <Select
+                          ariaLabel={`Rol de ${user.email}`}
                           value={selected}
+                          options={ROLE_OPTIONS}
                           disabled={isMe}
                           title={isMe ? 'No podés cambiar tu propio rol' : undefined}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (isRoleName(value)) {
-                              setSelectedRoles((current) => ({ ...current, [user.id]: value }));
-                            }
-                          }}
-                        >
-                          {ROLE_NAMES.map((role) => (
-                            <option key={role} value={role}>
-                              {role}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(role) => setSelectedRoles((current) => ({ ...current, [user.id]: role }))}
+                        />
                       </Can>
                       {/* Sin permiso para asignar, solo se muestra el rol */}
                       {!currentUser?.permissions.includes('user:assign-role') && (
-                        <span className="role-tag">{user.role}</span>
+                        <span className="role-tag">{getRoleLabel(user.role)}</span>
                       )}
                     </td>
                     <Can permission="user:assign-role">
