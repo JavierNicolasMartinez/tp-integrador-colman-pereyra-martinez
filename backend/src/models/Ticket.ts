@@ -4,6 +4,14 @@ import mongoose, { Schema, Document } from 'mongoose';
 export const TICKET_STATUSES = ['ABIERTO', 'EN_PROGRESO', 'RESUELTO', 'CERRADO'] as const;
 export type TicketStatus = typeof TICKET_STATUSES[number];
 
+// Nombres legibles para los mensajes que ve el usuario (en la base se guarda siempre el valor de TicketStatus)
+export const STATUS_LABELS: Record<TicketStatus, string> = {
+  ABIERTO: 'Abierto',
+  EN_PROGRESO: 'En progreso',
+  RESUELTO: 'Resuelto',
+  CERRADO: 'Cerrado'
+};
+
 export interface ITicket extends Document {
   title: string;
   description: string;

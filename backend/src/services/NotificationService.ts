@@ -1,4 +1,5 @@
 import { HttpError } from '../errors/HttpError.ts';
+import { STATUS_LABELS } from '../models/Ticket.ts';
 import type { INotifier, Notification } from '../notifications/INotifier.ts';
 import type { NotifierChannel, NotifierFactory } from '../notifications/NotifierFactory.ts';
 import type { IObserver } from '../observer/IObserver.ts';
@@ -37,7 +38,7 @@ export class NotificationService implements IObserver<TicketStatusChangedEvent> 
         ticketTitle: event.ticketTitle,
         previousStatus: event.previousStatus,
         newStatus: event.newStatus,
-        message: `El ticket "${event.ticketTitle}" pasó de ${event.previousStatus} a ${event.newStatus}`
+        message: `El ticket "${event.ticketTitle}" pasó de ${STATUS_LABELS[event.previousStatus]} a ${STATUS_LABELS[event.newStatus]}`
       };
       return this.notifiers.map((notifier) => notifier.send(notification));
     });

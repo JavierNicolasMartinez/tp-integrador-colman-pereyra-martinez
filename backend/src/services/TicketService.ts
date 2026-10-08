@@ -1,5 +1,5 @@
 import { HttpError } from '../errors/HttpError.ts';
-import type { TicketStatus } from '../models/Ticket.ts';
+import { STATUS_LABELS, type TicketStatus } from '../models/Ticket.ts';
 import type { ISubject } from '../observer/ISubject.ts';
 import type { TicketStatusChangedEvent } from '../observer/TicketStatusChangedEvent.ts';
 import type { INotificationRepository } from '../repositories/interfaces/INotificationRepository.ts';
@@ -48,7 +48,7 @@ export class TicketService {
     const current = await this.getById(id);
 
     if (current.status === newStatus) {
-      throw new HttpError(400, `El ticket ya está en estado ${newStatus}`);
+      throw new HttpError(400, `El ticket ya está en estado ${STATUS_LABELS[newStatus]}`);
     }
 
     const updated = await this.ticketRepository.updateStatus(id, newStatus);
