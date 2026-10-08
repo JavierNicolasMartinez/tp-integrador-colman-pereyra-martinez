@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { getErrorMessage } from '../api/client.ts';
 import { createTicket, getTicket, updateTicket } from '../api/tickets.api.ts';
+import { FieldError } from '../components/FieldError.tsx';
+import { useFieldErrors } from '../utils/useFieldErrors.ts';
 
 const MAX_TITLE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 2000;
@@ -17,6 +19,7 @@ export function TicketFormPage() {
   const [loading, setLoading] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { errors, validate, clearError, fieldProps } = useFieldErrors();
 
   // En modo edición se cargan los datos actuales del ticket
   useEffect(() => {
@@ -52,37 +55,48 @@ export function TicketFormPage() {
       </Link>
 
       <form
-        className="card form"
+        className="card form glow-warm"
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          void handleSubmit();
+          if (validate(event.currentTarget)) void handleSubmit();
         }}
       >
-        <h1>{isEditing ? 'Editar ticket' : 'Nuevo ticket'}</h1>
+        <h1 className="hero-title">{isEditing ? 'Editar ticket' : 'Nuevo ticket'}</h1>
 
         <label>
           Título
           <input
+            {...fieldProps('title')}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              clearError('title');
+            }}
             maxLength={MAX_TITLE_LENGTH}
             required
             autoFocus
           />
+          <FieldError name="title" message={errors.title} />
         </label>
         <label>
           Descripción
           <textarea
+            {...fieldProps('description')}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              clearError('description');
+            }}
             maxLength={MAX_DESCRIPTION_LENGTH}
-            rows={6}
+            rows={5}
             required
           />
+          <FieldError name="description" message={errors.description} />
         </label>
 
         {!isEditing && <p className="muted small">Los tickets nuevos se crean con estado Abierto.</p>}
-        {error && <p className="alert error">{error}</p>}
+        {error && <p className="alert error" role="alert">{error}</p>}
 
         <div className="actions">
           <button type="submit" className="button" disabled={submitting}>
