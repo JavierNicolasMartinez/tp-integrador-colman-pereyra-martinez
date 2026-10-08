@@ -31,7 +31,17 @@ services:
       mongodb:
         condition: service_healthy
 
-  # El servicio "frontend" se agrega al integrar la rama del frontend
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Vite toma la URL de la API al compilar (la usa el navegador)
+        VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
 
 volumes:
   mongo_data:
